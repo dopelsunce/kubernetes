@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/kubernetes/pkg/util/wait"
 )
 
 // TestPopReleaseLock tests that when processor listener blocks on chan,
@@ -41,8 +40,30 @@ func TestPopReleaseLock(t *testing.T) {
 
 	select {
 	case <-resultCh:
-	case <-time.After(wait.ForeverTestTimeout):
-		t.Errorf("Timeout after %v", wait.ForeverTestTimeout)
+	case <-time.After(100 * time.Millisecond):
+		t.Errorf("Timeout after %v", 100 * time.Millisecond)
 	}
 	pl.lock.Unlock()
+}
+
+func TestDDNeo(t *testing.T) {
+	pl := newProcessListener(nil)
+	stopCh := make(chan struct{})
+	// make pop() block on nextCh: waiting for receiver to get notification.
+	pl.add(1)
+
+	resultCh := make(chan struct{})
+	go func() {
+		pl.pop(stopCh)
+		resultCh <- struct{}{}
+	}()
+	pl.lock.Lock()
+	pl.lock.Unlock()
+	close(stopCh)
+
+	select {
+	case <-resultCh:
+	case <-time.After(100 * time.Millisecond):
+		t.Errorf("Timeout! DD triggered")
+	}
 }
