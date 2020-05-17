@@ -140,16 +140,15 @@ fi
 if [[ -n "$1" ]]; then
   covdir="/tmp/k8s_coverage/$(date "+%s")"
   echo saving coverage output in "${covdir}"
-  for arg; do
-    trap 'exit 1' SIGINT
-    mkdir -p "${covdir}/${arg}"
-    pkg=${KUBE_GO_PACKAGE}/${arg}
-    go test "${goflags[@]:+${goflags[@]}}" \
-        -race \
-        ${KUBE_TIMEOUT} \
-        ${KUBE_COVER} -coverprofile="${covdir}/${arg}/coverage.out" \
-        "${pkg}"
-  done
+  trap 'exit 1' SIGINT
+  mkdir -p "${covdir}/$1}"
+  pkg=${KUBE_GO_PACKAGE}/$1
+  go test "${goflags[@]:+${goflags[@]}}" \
+      -race \
+      ${KUBE_TIMEOUT} \
+      ${KUBE_COVER} -coverprofile="${covdir}/$1/coverage.out" \
+      -run "$2" \
+      "$1"
   exit 0
 fi
 

@@ -126,13 +126,6 @@ kube::setup_go_environment() {
   # there anyway.
   if [[ "${TRAVIS:-}" != "true" ]]; then
     local go_version
-    go_version=($(go version))
-    if [[ "${go_version[2]}" < "go1.2" ]]; then
-      echo "Detected go version: ${go_version[*]}." >&2
-      echo "Kubernetes requires go version 1.2 or greater." >&2
-      echo "Please install Go version 1.2 or later" >&2
-      exit 1
-    fi
   fi
 
   GOPATH=${KUBE_TARGET}

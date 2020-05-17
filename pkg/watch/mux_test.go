@@ -113,3 +113,22 @@ func TestMuxWatcherStopDeadlock(t *testing.T) {
 	}
 	m.Shutdown()
 }
+
+func TestDDNeo(t *testing.T) {
+	c := make(chan struct{})
+	go func() {
+		m := NewMux(0)
+		m.Action(Added, &myType{})
+		watch := m.Watch()
+		<-watch.ResultChan()
+		watch.Stop()
+		m.Shutdown()
+		<-m.done
+		close(c)
+	}()
+	select {
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("Timeout! deadlocked")
+	case <-c:
+	}
+}

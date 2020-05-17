@@ -31,6 +31,7 @@ type Mux struct {
 	nextWatcher int64
 
 	incoming chan Event
+	done chan bool
 }
 
 // NewMux creates a new Mux. queueLength is the maximum number of events to queue.
@@ -42,6 +43,7 @@ func NewMux(queueLength int) *Mux {
 	m := &Mux{
 		watchers: map[int64]*muxWatcher{},
 		incoming: make(chan Event, queueLength),
+		done: make(chan bool),
 	}
 	go m.loop()
 	return m
@@ -113,6 +115,7 @@ func (m *Mux) loop() {
 		m.distribute(event)
 	}
 	m.closeAll()
+	close(m.done)
 }
 
 var testHookMuxDistribute = func() {}
